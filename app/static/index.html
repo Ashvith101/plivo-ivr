@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InspireWorks IVR Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #13131a; --border: #2a2a3a;
+      --accent: #00e5ff; --accent2: #7c3aed; --text: #e8e8f0;
+      --muted: #6b6b8a; --success: #00ff88; --error: #ff4466;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Syne', sans-serif; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px; z-index: 0;
+      animation: gridMove 20s linear infinite;
+    }
+    @keyframes gridMove { 0% { transform: translateY(0); } 100% { transform: translateY(40px); } }
+    body::after {
+      content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(124,58,237,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(0,229,255,0.06) 0%, transparent 50%);
+      z-index: 0; animation: bgPulse 8s ease-in-out infinite alternate;
+    }
+    @keyframes bgPulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+    .container { position: relative; z-index: 1; width: 100%; max-width: 520px; padding: 24px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 40px; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+    }
+    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .logo-text { font-size: 13px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+    h1 {
+      font-size: 28px; font-weight: 800; line-height: 1.2; margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--text) 60%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; font-family: 'Space Mono', monospace; }
+    .input-group { margin-bottom: 24px; }
+    label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-family: 'Space Mono', monospace; }
+    input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 16px; color: var(--text);
+      font-family: 'Space Mono', monospace; font-size: 15px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,0.1); }
+    input::placeholder { color: var(--muted); }
+    .btn {
+      width: 100%; padding: 16px; border: none; border-radius: 10px;
+      font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+      background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #000;
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,255,0.25); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .status-box {
+      margin-top: 20px; padding: 14px 16px; border-radius: 8px;
+      font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.6;
+      display: none; border: 1px solid; animation: fadeIn 0.3s ease; white-space: pre-line;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .status-box.success { display: block; background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.3); color: var(--success); }
+    .status-box.error { display: block; background: rgba(255,68,102,0.08); border-color: rgba(255,68,102,0.3); color: var(--error); }
+    .status-box.loading { display: block; background: rgba(0,229,255,0.08); border-color: rgba(0,229,255,0.3); color: var(--accent); }
+    .flow-steps { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .flow-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; font-family: 'Space Mono', monospace; }
+    .steps { display: flex; flex-direction: column; gap: 8px; }
+    .step { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
+    .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; color: var(--accent); border: 1px solid var(--accent2); }
+    .otp-hint { margin-top: 16px; padding: 10px 14px; background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 6px; font-family: 'Space Mono', monospace; font-size: 11px; color: #a78bfa; }
+    .otp-hint span { color: var(--text); font-weight: 700; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,229,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="logo">
+        <div class="logo-icon">📞</div>
+        <div class="logo-text">InspireWorks IVR</div>
+      </div>
+      <h1>Outbound Call Demo</h1>
+      <p class="subtitle">// Plivo Voice API · Multi-level IVR</p>
+      <div class="input-group">
+        <label>Destination Number</label>
+        <input type="tel" id="phoneInput" placeholder="918185075097" value="918185075097"/>
+      </div>
+      <button class="btn" id="callBtn" onclick="triggerCall()">
+        <div class="btn-inner">
+          <span>📲</span>
+          <span id="btnText">Trigger Outbound Call</span>
+        </div>
+      </button>
+      <div class="otp-hint">OTP: <span>1503</span> &nbsp;·&nbsp; Enter on keypad when prompted</div>
+      <div class="status-box" id="statusBox"></div>
+      <div class="flow-steps">
+        <div class="flow-title">IVR Flow</div>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div> Answer → Enter 4-digit OTP (1503)</div>
+          <div class="step"><div class="step-num">2</div> Press 1 English / 2 Spanish</div>
+          <div class="step"><div class="step-num">3</div> Press 1 Audio Message / 2 Live Associate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    async function triggerCall() {
+      const btn = document.getElementById('callBtn');
+      const btnText = document.getElementById('btnText');
+      const statusBox = document.getElementById('statusBox');
+      const phone = document.getElementById('phoneInput').value.trim();
+      if (!phone) { showStatus('error', '✗ Please enter a phone number'); return; }
+      btn.disabled = true;
+      btnText.innerHTML = '<span class="spinner"></span>Initiating Call...';
+      statusBox.className = 'status-box'; statusBox.style.display = 'none';
+      try {
+        const res = await fetch('/call/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to_number: phone })
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'success') {
+          showStatus('success', `✓ Call initiated!\nAPI ID: ${data.api_id}\nCalling: ${data.to}\n\nPick up and enter OTP: 1503`);
+        } else {
+          showStatus('error', `✗ Error: ${data.detail || JSON.stringify(data)}`);
+        }
+      } catch (err) {
+        showStatus('error', `✗ Failed: ${err.message}\nIs the server running?`);
+      } finally {
+        btn.disabled = false;
+        btnText.innerHTML = 'Trigger Outbound Call';
+      }
+    }
+    function showStatus(type, msg) {
+      const box = document.getElementById('statusBox');
+      box.className = `status-box ${type}`;
+      box.style.display = 'block';
+      box.textContent = msg;
+    }
+    document.getElementById('phoneInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') triggerCall();
+    });
+  </script>
+</body>
+</html>
